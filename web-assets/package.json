@@ -1,0 +1,13 @@
+{
+  "name": "readweb-markdown-assets",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Pinned Markdown renderer assets for the ReadWeb Android app",
+  "scripts": {
+    "test": "node --test",
+    "sync-assets": "node ./sync-assets.cjs"
+  },
+  "devDependencies": {
+    "markdown-it": "14.3.1"
+  }
+}

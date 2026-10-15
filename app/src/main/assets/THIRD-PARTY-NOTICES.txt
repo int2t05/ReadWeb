@@ -1,0 +1,13 @@
+# Bundled JavaScript licenses
+
+ReadWeb bundles the following JavaScript packages and their licenses:
+
+- markdown-it 14.3.1 — MIT: [licenses/markdown-it-LICENSE.txt](licenses/markdown-it-LICENSE.txt)
+- argparse 2.0.1 — Python-2.0: [licenses/argparse-LICENSE.txt](licenses/argparse-LICENSE.txt)
+- entities 4.5.0 — BSD-2-Clause: [licenses/entities-LICENSE.txt](licenses/entities-LICENSE.txt)
+- linkify-it 5.0.2 — MIT: [licenses/linkify-it-LICENSE.txt](licenses/linkify-it-LICENSE.txt)
+- mdurl 2.1.0 — MIT: [licenses/mdurl-LICENSE.txt](licenses/mdurl-LICENSE.txt)
+- punycode.js 2.3.1 — MIT: [licenses/punycode.js-LICENSE.txt](licenses/punycode.js-LICENSE.txt)
+- uc.micro 2.1.0 — MIT: [licenses/uc.micro-LICENSE.txt](licenses/uc.micro-LICENSE.txt)
+
+The exact dependency graph is pinned in `web-assets/package-lock.json`.

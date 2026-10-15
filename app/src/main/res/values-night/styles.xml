@@ -1,0 +1,11 @@
+<resources>
+    <style name="Theme.ReadWeb" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">#A5C8AF</item>
+        <item name="android:navigationBarColor">#181A18</item>
+        <item name="android:statusBarColor">#181A18</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowBackground">#181A18</item>
+    </style>
+</resources>

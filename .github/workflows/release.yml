@@ -1,0 +1,106 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7.0.1
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v6.1.0
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v7.1.0
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web-assets/package-lock.json
+
+      - name: Set up Android SDK tools
+        uses: android-actions/setup-android@v4.0.4
+        with:
+          packages: ''
+
+      - name: Install Android API 36
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+
+      - name: Validate release version and signing secrets
+        env:
+          READWEB_RELEASE_KEYSTORE_BASE64: ${{ secrets.READWEB_RELEASE_KEYSTORE_BASE64 }}
+          READWEB_RELEASE_STORE_PASSWORD: ${{ secrets.READWEB_RELEASE_STORE_PASSWORD }}
+          READWEB_RELEASE_KEY_ALIAS: ${{ secrets.READWEB_RELEASE_KEY_ALIAS }}
+          READWEB_RELEASE_KEY_PASSWORD: ${{ secrets.READWEB_RELEASE_KEY_PASSWORD }}
+        run: |
+          version="$(sed -n "s/^[[:space:]]*versionName = '\([^']*\)'/\1/p" app/build.gradle | head -n 1)"
+          version_code="$(sed -n "s/^[[:space:]]*versionCode = \([0-9][0-9]*\)/\1/p" app/build.gradle | head -n 1)"
+          test "$GITHUB_REF_NAME" = "v$version"
+          test -f "docs/releases/$version.md"
+          test -n "$version_code"
+          test -n "$READWEB_RELEASE_KEYSTORE_BASE64"
+          test -n "$READWEB_RELEASE_STORE_PASSWORD"
+          test -n "$READWEB_RELEASE_KEY_ALIAS"
+          test -n "$READWEB_RELEASE_KEY_PASSWORD"
+          keystore="$RUNNER_TEMP/readweb-release.jks"
+          printf '%s' "$READWEB_RELEASE_KEYSTORE_BASE64" | base64 --decode > "$keystore"
+          echo "READWEB_RELEASE_STORE_FILE=$keystore" >> "$GITHUB_ENV"
+          echo "READWEB_RELEASE_VERSION_CODE=$version_code" >> "$GITHUB_ENV"
+
+      - name: Test and audit Markdown renderer
+        working-directory: web-assets
+        run: |
+          npm ci
+          npm test
+          npm audit --audit-level=high
+          npm run sync-assets
+          git -C .. diff --exit-code -- \
+            app/src/main/assets/markdown-it.min.js \
+            app/src/main/assets/markdown-renderer.js \
+            app/src/main/assets/THIRD-PARTY-NOTICES.txt \
+            app/src/main/assets/licenses/
+
+      - name: Test, lint, and build signed release APK
+        env:
+          READWEB_RELEASE_STORE_PASSWORD: ${{ secrets.READWEB_RELEASE_STORE_PASSWORD }}
+          READWEB_RELEASE_KEY_ALIAS: ${{ secrets.READWEB_RELEASE_KEY_ALIAS }}
+          READWEB_RELEASE_KEY_PASSWORD: ${{ secrets.READWEB_RELEASE_KEY_PASSWORD }}
+        run: ./gradlew testDebugUnitTest lint assembleRelease
+
+      - name: Verify APK and calculate checksum
+        id: artifact
+        run: |
+          apk=app/build/outputs/apk/release/app-release.apk
+          test -f "$apk"
+          "$ANDROID_SDK_ROOT/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$apk"
+          "$ANDROID_SDK_ROOT/build-tools/36.0.0/aapt" dump badging "$apk" | \
+            grep -F "package: name='io.github.int2t05.readweb' versionCode='$READWEB_RELEASE_VERSION_CODE' versionName='${GITHUB_REF_NAME#v}'"
+          sha256sum "$apk" > "$apk.sha256"
+          echo "apk=$apk" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          gh release create "$GITHUB_REF_NAME" \
+            "${{ steps.artifact.outputs.apk }}" \
+            "${{ steps.artifact.outputs.apk }}.sha256" \
+            --title "ReadWeb $GITHUB_REF_NAME" \
+            --notes-file "docs/releases/$version.md"
