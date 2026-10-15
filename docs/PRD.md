@@ -113,10 +113,9 @@ ReadWeb 是一款面向 Android 的轻量阅读应用。用户可以在多个标
 
 ## 5. 首版交付状态
 
-版本号已提升为 `1.0.0`。自动化单测、Markdown renderer 测试、依赖审计、Android lint、Debug 安装及 API 36 模拟器核心交互检查已完成。Vivo/OriginOS 真机兼容性、长时间稳定性和第 4 节性能指标尚未验证；这些结果不会由桌面构建代替。验证细节与环境记录见 [技术设计](TECH.md)。
+版本 `1.0.0` 已发布，带签名 APK 与 SHA-256 校验文件。自动化单测、Markdown renderer 测试、依赖审计、Android lint、GitHub Actions 和 API 36 模拟器核心交互检查已通过。Vivo/OriginOS 真机兼容性、长时间稳定性和第 4 节性能指标尚未验证；这些结果不会由桌面构建代替。验证细节与环境记录见 [技术设计](TECH.md)。
 
 ## 6. 待评审事项
 
 - 目标手机型号、Android/OriginOS 版本和常读 URL。
 - 是否接受第 4 节的建议性能目标，或应为目标机型设定其他门槛。
-- 首次 GitHub Actions 验证与 Release 发布结果待推送 `main` 和 `v1.0.0` 后确认；Vivo/OriginOS 真机兼容性和性能指标仍需实测。

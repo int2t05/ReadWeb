@@ -91,7 +91,12 @@ jobs:
           "$ANDROID_SDK_ROOT/build-tools/36.0.0/apksigner" verify --verbose --print-certs "$apk"
           "$ANDROID_SDK_ROOT/build-tools/36.0.0/aapt" dump badging "$apk" | \
             grep -F "package: name='io.github.int2t05.readweb' versionCode='$READWEB_RELEASE_VERSION_CODE' versionName='${GITHUB_REF_NAME#v}'"
-          sha256sum "$apk" > "$apk.sha256"
+          (
+            cd "$(dirname "$apk")"
+            apk_name="$(basename "$apk")"
+            sha256sum "$apk_name" > "$apk_name.sha256"
+            sha256sum --check "$apk_name.sha256"
+          )
           echo "apk=$apk" >> "$GITHUB_OUTPUT"
 
       - name: Publish GitHub release
